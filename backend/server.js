@@ -1,0 +1,31 @@
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+require('dotenv').config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+});
+
+pool.connect()
+    .then(() => console.log('Connected to database'))
+    .catch(err => console.error('Database connection error:', err));
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/timetable', require('./routes/timetable'));
+app.use('/api/reservations', require('./routes/reservations'));
+app.use('/api/approvals', require('./routes/approvals'));
+
+app.listen(process.env.PORT, () => {
+    console.log(`Server running on http://localhost:${process.env.PORT}`);
+});

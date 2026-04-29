@@ -17,8 +17,8 @@ pool.connect()
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/timetable', require('./routes/timetable'));
-app.use('/api/reservations', require('./routes/reservations'));
-app.use('/api/approvals', require('./routes/approvals'));
+app.use('/api/reservation', require('./routes/reservation'));
+app.use('/api/approval', require('./routes/approval'));
 
 app.listen(process.env.PORT, () => {
     console.log(`Server running on http://localhost:${process.env.PORT}`);

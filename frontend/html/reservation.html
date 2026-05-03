@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reservations — CRS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f4f5f7; --white: #fff; --border: #e0e2e7;
+    --text: #111827; --muted: #6b7280; --hint: #9ca3af;
+    --blue: #185fa5; --blue-light: #e6f1fb; --blue-mid: #378add;
+    --green: #3b6d11; --green-light: #eaf3de;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; }
+
+  nav {
+    background: var(--white); border-bottom: 0.5px solid var(--border);
+    height: 52px; display: flex; align-items: center;
+    padding: 0 1.5rem; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-left { display: flex; align-items: center; gap: 1rem; }
+  .brand { font-size: 14px; font-weight: 500; color: var(--text); }
+  .nav-links { display: flex; gap: 2px; }
+  .nl { padding: 6px 14px; border-radius: 6px; font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: none; transition: background 0.1s; }
+  .nl:hover { background: var(--bg); color: var(--text); }
+  .nl.active { background: var(--blue-light); color: var(--blue); }
+  .user-chip { display: flex; align-items: center; gap: 8px; border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 12px 4px 4px; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: var(--blue); }
+  .user-name { font-size: 12px; color: #374151; }
+  .logout-btn { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
+  .logout-btn:hover { color: #dc2626; }
+
+  .body { padding: 1.5rem; max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 290px 1fr; gap: 1.2rem; align-items: start; }
+
+  .panel { background: var(--white); border: 0.5px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+  .pt { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 1rem; padding-bottom: 10px; border-bottom: 0.5px solid var(--border); }
+
+  label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; margin-top: 12px; letter-spacing: 0.3px; text-transform: uppercase; }
+  label:first-of-type { margin-top: 0; }
+
+  input, select {
+    width: 100%; background: #f9fafb; border: 0.5px solid var(--border);
+    border-radius: 7px; padding: 8px 10px; color: var(--text);
+    font-size: 13px; font-family: inherit; outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus { border-color: var(--blue-mid); background: var(--white); }
+
+  .btn-submit {
+    width: 100%; background: var(--blue); border: none; border-radius: 7px;
+    padding: 10px; color: var(--blue-light); font-size: 13px; font-weight: 500;
+    font-family: inherit; cursor: pointer; margin-top: 1.2rem; transition: background 0.15s;
+  }
+  .btn-submit:hover { background: #0c4479; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .success-msg { background: var(--green-light); border: 0.5px solid #b5d490; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--green); margin-top: 10px; display: none; }
+  .error-msg { background: #fef2f2; border: 0.5px solid #fecaca; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #b91c1c; margin-top: 10px; display: none; }
+
+  /* Right panel */
+  .right-panel { display: flex; flex-direction: column; gap: 1.2rem; }
+
+  .day-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .day-btn {
+    padding: 5px 14px; border-radius: 6px; font-size: 12px; font-family: inherit;
+    border: 0.5px solid var(--border); color: var(--muted); cursor: pointer;
+    background: var(--white); transition: all 0.1s;
+  }
+  .day-btn:hover { border-color: #b5d4f4; color: var(--blue); }
+  .day-btn.active { background: var(--blue-light); color: var(--blue); border-color: #85b7eb; }
+
+  .room-section { margin-bottom: 1rem; }
+  .room-label {
+    font-size: 12px; font-weight: 500; color: #374151;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+  }
+  .room-badge { background: var(--bg); border: 0.5px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: 10px; color: var(--muted); }
+
+  .room-grid { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 400px; }
+  th {
+    font-size: 10px; color: var(--hint); padding: 5px 4px; border: 0.5px solid var(--border);
+    text-align: center; background: #f9fafb; letter-spacing: 0.2px;
+  }
+  .tc2 { font-size: 10px; color: var(--hint); padding: 4px 8px; border: 0.5px solid var(--border); background: #f9fafb; text-align: center; white-space: nowrap; width: 50px; }
+  td { border: 0.5px solid var(--border); padding: 2px; height: 44px; background: var(--white); vertical-align: top; }
+
+  .cell2 { border-radius: 4px; padding: 4px 5px; height: 100%; }
+  .occupied { background: #f3f4f6; }
+  .occupied .cc2 { font-size: 10px; font-weight: 500; color: #374151; }
+  .occupied .ci2 { font-size: 9px; color: var(--hint); margin-top: 1px; }
+  .cb2 { background: #e6f1fb; } .cb2 .cc2 { color: #0c447c; } .cb2 .ci2 { color: #185fa5; }
+  .cg2 { background: #eaf3de; } .cg2 .cc2 { color: #27500a; } .cg2 .ci2 { color: #3b6d11; }
+  .ca2 { background: #faeeda; } .ca2 .cc2 { color: #633806; }
+  .cp2 { background: #eeedfe; } .cp2 .cc2 { color: #3c3489; }
+  .ce2 { background: #f9fafb; }
+
+  .avail {
+    background: var(--green-light); cursor: pointer; transition: background 0.1s;
+  }
+  .avail:hover { background: #d5ecb8; }
+  .avail-txt { font-size: 10px; color: var(--green); text-align: center; padding-top: 10px; font-weight: 500; }
+
+  .selected-cell { background: #d1fae5 !important; }
+  .selected-cell .avail-txt { color: #065f46; }
+
+  .my-res-list { display: flex; flex-direction: column; gap: 8px; }
+  .res-item { background: #f9fafb; border: 0.5px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .res-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+  .res-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+  .pending-b { background: #fef9c3; color: #854d0e; }
+  .approved-b { background: var(--green-light); color: var(--green); }
+  .rejected-b { background: #fef2f2; color: #b91c1c; }
+  .res-detail { font-size: 11px; color: var(--hint); }
+
+  .tab-row { display: flex; gap: 2px; margin-bottom: 1rem; border-bottom: 0.5px solid var(--border); padding-bottom: 10px; }
+  .tab { padding: 5px 14px; border-radius: 6px; font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.1s; }
+  .tab.active { background: var(--blue-light); color: var(--blue); }
+
+  .empty-state { text-align: center; color: var(--hint); font-size: 13px; padding: 2rem; }
+
+  @media (max-width: 700px) {
+    .body { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <span class="brand">CRS</span>
+    <div class="nav-links">
+      <a href="home.html" class="nl">Home</a>
+      <a href="timetable.html" class="nl">Timetable</a>
+      <a href="reservation.html" class="nl active">Reservations</a>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="user-chip">
+      <div class="avatar" id="avatar">?</div>
+      <span class="user-name" id="user-name">—</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="body">
+  <!-- LEFT: Booking form -->
+  <div>
+    <div class="panel">
+      <div class="pt">Book a classroom</div>
+      <label>Date</label>
+      <input type="date" id="res-date">
+
+      <label>Section</label>
+      <select id="res-section">
+        <option value="">— Select —</option>
+        <option value="2A">2A</option>
+        <option value="2B">2B</option>
+        <option value="2C">2C</option>
+        <option value="2D">2D</option>
+        <option value="2E">2E</option>
+        <option value="2F">2F</option>
+      </select>
+
+      <label>Time slot</label>
+      <select id="res-slot">
+        <option value="">— Select —</option>
+        <option value="1">08:30 – 09:20</option>
+        <option value="2">09:20 – 10:10</option>
+        <option value="3">10:10 – 11:00</option>
+        <option value="4">11:30 – 12:20</option>
+        <option value="5">12:20 – 13:10</option>
+        <option value="6">14:00 – 14:50</option>
+        <option value="7">14:50 – 15:40</option>
+        <option value="8">15:40 – 16:30</option>
+      </select>
+
+      <label>Room <span style="font-size:10px;color:var(--hint)">(click a free slot in grid →)</span></label>
+      <input type="text" id="res-room" placeholder="Click an available slot" readonly>
+
+      <label>Purpose</label>
+      <input type="text" id="res-purpose" placeholder="e.g. CS-252 makeup lecture">
+
+      <button class="btn-submit" id="submit-btn" onclick="submitReservation()">Submit reservation</button>
+      <div class="success-msg" id="success-msg">Reservation submitted successfully.</div>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <div class="panel" style="margin-top:1.2rem">
+      <div class="pt">My reservations</div>
+      <div class="my-res-list" id="my-res-list">
+        <div class="empty-state">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Room availability grid -->
+  <div class="right-panel">
+    <div class="panel">
+      <div class="pt">Room availability</div>
+      <div class="day-row" id="day-row">
+        <button class="day-btn active" data-day="Monday">Monday</button>
+        <button class="day-btn" data-day="Tuesday">Tuesday</button>
+        <button class="day-btn" data-day="Wednesday">Wednesday</button>
+        <button class="day-btn" data-day="Thursday">Thursday</button>
+        <button class="day-btn" data-day="Friday">Friday</button>
+      </div>
+
+      <div id="room-grids">
+        <div class="empty-state">Loading timetable data...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:4000/api';
+  const token = localStorage.getItem('token');
+  const name = localStorage.getItem('name') || '';
+  const staffId = localStorage.getItem('staff_id');
+
+  if (!token) window.location.href = 'auth.html';
+
+  function logout() { localStorage.clear(); window.location.href = 'auth.html'; }
+  function getInitials(n) { return n.split(' ').map(x => x[0]).join('').toUpperCase().slice(0,2); }
+
+  document.getElementById('avatar').textContent = getInitials(name);
+  document.getElementById('user-name').textContent = name;
+
+  const ROOMS = [2, 3, 9, 11, 12];
+  const SLOTS = [
+    { id: 1, label: '08:30' },
+    { id: 2, label: '09:20' },
+    { id: 3, label: '10:10' },
+    { id: 4, label: '11:30' },
+    { id: 5, label: '12:20' },
+    { id: 6, label: '14:00' },
+    { id: 7, label: '14:50' },
+    { id: 8, label: '15:40' },
+  ];
+
+  const COURSE_COLORS = {
+    'CS-252': 'cb2', 'CT-261': 'cg2', 'EC-209': 'ca2', 'MT-272': 'cp2', 'EA-218': 'ce2'
+  };
+
+  let allTimetable = [];
+  let selectedDay = 'Monday';
+  let selectedRoom = null;
+  let selectedSlotId = null;
+  let selectedCell = null;
+
+  async function loadAllTimetable() {
+    try {
+      const res = await fetch(`${API}/timetable`, { headers: { 'authorization': token } });
+      if (res.ok) {
+        allTimetable = await res.json();
+        renderRoomGrids(selectedDay);
+      }
+    } catch(e) {
+      document.getElementById('room-grids').innerHTML = '<div class="empty-state">Failed to load timetable</div>';
+    }
+  }
+
+  function renderRoomGrids(day) {
+    const container = document.getElementById('room-grids');
+    container.innerHTML = '';
+
+    ROOMS.forEach(roomNo => {
+      const roomEntries = allTimetable.filter(e => e.room_no == roomNo && e.day_no === day);
+      const entryMap = {};
+      roomEntries.forEach(e => { entryMap[e.slot_id] = e; });
+
+      const section = document.createElement('div');
+      section.className = 'room-section';
+
+      section.innerHTML = `
+        <div class="room-label">Room ${roomNo} <span class="room-badge">Building A</span></div>
+        <div class="room-grid">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:45px">Slot</th>
+                ${SLOTS.map(s => `<th>${s.label}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="tc2">Status</td>
+                ${SLOTS.map(s => {
+                  const entry = entryMap[s.id];
+                  if (entry) {
+                    const cls = COURSE_COLORS[entry.course_code] || 'ce2';
+                    return `<td><div class="cell2 ${cls}">
+                      <div class="cc2">${entry.course_code}</div>
+                      <div class="ci2">${entry.section_id}</div>
+                    </div></td>`;
+                  } else {
+                    return `<td class="avail-cell" data-room="${roomNo}" data-slot="${s.id}" onclick="selectSlot(this, ${roomNo}, ${s.id})">
+                      <div class="cell2 avail">
+                        <div class="avail-txt">Free</div>
+                      </div>
+                    </td>`;
+                  }
+                }).join('')}
+              </tr>
+            </tbody>
+          </table>
+        </div>`;
+
+      container.appendChild(section);
+    });
+  }
+
+  function selectSlot(cell, roomNo, slotId) {
+    if (selectedCell) {
+      selectedCell.querySelector('.cell2').classList.remove('selected-cell');
+    }
+    selectedCell = cell;
+    cell.querySelector('.cell2').classList.add('selected-cell');
+    selectedRoom = roomNo;
+    selectedSlotId = slotId;
+    document.getElementById('res-room').value = `Room ${roomNo}`;
+    document.getElementById('res-slot').value = slotId;
+  }
+
+  // Day buttons
+  document.getElementById('day-row').addEventListener('click', (e) => {
+    if (!e.target.classList.contains('day-btn')) return;
+    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    selectedDay = e.target.dataset.day;
+    selectedCell = null;
+    selectedRoom = null;
+    selectedSlotId = null;
+    document.getElementById('res-room').value = '';
+    renderRoomGrids(selectedDay);
+  });
+
+  async function submitReservation() {
+    const date = document.getElementById('res-date').value;
+    const section = document.getElementById('res-section').value;
+    const slotId = document.getElementById('res-slot').value;
+    const purpose = document.getElementById('res-purpose').value;
+    const successMsg = document.getElementById('success-msg');
+    const errorMsg = document.getElementById('error-msg');
+
+    successMsg.style.display = 'none';
+    errorMsg.style.display = 'none';
+
+    if (!date || !section || !slotId || !selectedRoom) {
+      errorMsg.textContent = 'Please fill all fields and select a room from the grid.';
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/reservation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'authorization': token },
+        body: JSON.stringify({
+          reserved_date: date,
+          room_id: selectedRoom,
+          timeslot_id: parseInt(slotId),
+          section_id: section,
+          created_by: parseInt(staffId)
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorMsg.textContent = data.error || 'Failed to submit reservation';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      successMsg.style.display = 'block';
+      document.getElementById('res-date').value = '';
+      document.getElementById('res-section').value = '';
+      document.getElementById('res-slot').value = '';
+      document.getElementById('res-room').value = '';
+      document.getElementById('res-purpose').value = '';
+      selectedRoom = null;
+      selectedSlotId = null;
+      if (selectedCell) { selectedCell.querySelector('.cell2').classList.remove('selected-cell'); selectedCell = null; }
+      loadMyReservations();
+
+    } catch(e) {
+      errorMsg.textContent = 'Cannot connect to server.';
+      errorMsg.style.display = 'block';
+    }
+  }
+
+  async function loadMyReservations() {
+    const list = document.getElementById('my-res-list');
+    try {
+      const res = await fetch(`${API}/reservation?staff_id=${staffId}`, {
+        headers: { 'authorization': token }
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+
+      if (data.length === 0) {
+        list.innerHTML = '<div class="empty-state">No reservations yet</div>';
+        return;
+      }
+
+      list.innerHTML = data.map(r => {
+        const statusClass = r.approval_status === 'approved' ? 'approved-b' : r.approval_status === 'rejected' ? 'rejected-b' : 'pending-b';
+        return `
+          <div class="res-item">
+            <div class="res-header">
+              <span class="res-title">Room ${r.room_id} · Slot ${r.timeslot_id}</span>
+              <span class="badge ${statusClass}">${r.approval_status}</span>
+            </div>
+            <div class="res-detail">${r.section_id} · ${new Date(r.reserved_date).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})}</div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      list.innerHTML = '<div class="empty-state">Could not load reservations</div>';
+    }
+  }
+
+  loadAllTimetable();
+  loadMyReservations();
+</script>
+</body>
+</html>

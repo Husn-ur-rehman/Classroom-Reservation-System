@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home — CRS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f5f7;
+    --white: #ffffff;
+    --border: #e0e2e7;
+    --text: #111827;
+    --muted: #6b7280;
+    --hint: #9ca3af;
+    --blue: #185fa5;
+    --blue-light: #e6f1fb;
+    --blue-mid: #378add;
+    --green-light: #eaf3de;
+    --green: #3b6d11;
+    --radius: 10px;
+  }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; }
+
+  nav {
+    background: var(--white);
+    border-bottom: 0.5px solid var(--border);
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .nav-left { display: flex; align-items: center; gap: 1rem; }
+  .brand { font-size: 14px; font-weight: 500; color: var(--text); }
+
+  .nav-links { display: flex; gap: 2px; }
+  .nl {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.1s, color 0.1s;
+  }
+  .nl:hover { background: var(--bg); color: var(--text); }
+  .nl.active { background: var(--blue-light); color: var(--blue); }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px 4px 4px;
+    background: var(--white);
+    cursor: pointer;
+  }
+
+  .avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--blue-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--blue);
+  }
+
+  .user-name { font-size: 12px; color: #374151; }
+
+  .logout-btn {
+    font-size: 12px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  .logout-btn:hover { color: #dc2626; }
+
+  .body { padding: 1.5rem; max-width: 900px; margin: 0 auto; }
+
+  .greeting { margin-bottom: 1.5rem; }
+  .greeting h1 { font-size: 20px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .greeting p { font-size: 13px; color: var(--muted); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.4rem;
+  }
+
+  .stat-card {
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  .stat-label { font-size: 11px; color: var(--hint); margin-bottom: 6px; letter-spacing: 0.3px; text-transform: uppercase; }
+  .stat-val { font-size: 24px; font-weight: 500; color: var(--text); }
+  .stat-sub { font-size: 11px; color: var(--hint); margin-top: 2px; }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .action-card {
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    transition: border-color 0.15s;
+  }
+  .action-card:hover { border-color: #b5d4f4; }
+
+  .ac-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ac-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .ac-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .admin-section { margin-top: 1.4rem; }
+  .admin-title { font-size: 12px; color: var(--hint); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; }
+
+  .admin-card {
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s;
+  }
+  .admin-card:hover { border-color: #b5d4f4; }
+  .admin-card-left { display: flex; align-items: center; gap: 12px; }
+  .admin-card-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .admin-card-sub { font-size: 12px; color: var(--muted); }
+  .pending-badge { background: #fef9c3; color: #854d0e; font-size: 11px; padding: 3px 10px; border-radius: 10px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <span class="brand">CRS</span>
+    <div class="nav-links">
+      <a href="home.html" class="nl active">Home</a>
+      <a href="timetable.html" class="nl">Timetable</a>
+      <a href="reservation.html" class="nl">Reservations</a>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="user-chip">
+      <div class="avatar" id="avatar-initials">?</div>
+      <span class="user-name" id="user-name-display">Loading...</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="body">
+  <div class="greeting">
+    <h1 id="greeting-text">Good morning</h1>
+    <p id="greeting-date">Loading...</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Your reservations</div>
+      <div class="stat-val" id="res-count">—</div>
+      <div class="stat-sub" id="res-sub">Loading...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Available rooms</div>
+      <div class="stat-val" id="rooms-count">—</div>
+      <div class="stat-sub">Right now</div>
+    </div>
+    <div class="stat-card" id="section-card">
+      <div class="stat-label">Your role</div>
+      <div class="stat-val" id="role-display">—</div>
+      <div class="stat-sub" id="role-sub">—</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a href="timetable.html" class="action-card">
+      <div class="ac-icon" style="background:#e6f1fb">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div class="ac-title">View timetable</div>
+      <div class="ac-desc">Browse the weekly schedule for any section</div>
+    </a>
+    <a href="reservation.html" class="action-card">
+      <div class="ac-icon" style="background:#eaf3de">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="2" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </div>
+      <div class="ac-title">Book a room</div>
+      <div class="ac-desc">Reserve a classroom for an unattended class period</div>
+    </a>
+  </div>
+
+  <div class="admin-section hidden" id="admin-section">
+    <div class="admin-title">Admin</div>
+    <a href="approvals.html" class="admin-card">
+      <div class="admin-card-left">
+        <div class="ac-icon" style="background:#fef9c3;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#854d0e" stroke-width="2" stroke-linecap="round">
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+          </svg>
+        </div>
+        <div>
+          <div class="admin-card-title">Approval requests</div>
+          <div class="admin-card-sub">Review pending room reservations</div>
+        </div>
+      </div>
+      <span class="pending-badge" id="pending-count">—</span>
+    </a>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:4000/api';
+
+  const token = localStorage.getItem('token');
+  const name = localStorage.getItem('name') || '';
+  const role = localStorage.getItem('role') || '';
+  const staffId = localStorage.getItem('staff_id');
+
+  if (!token) window.location.href = 'auth.html';
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'auth.html';
+  }
+
+  function getInitials(fullName) {
+    return fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  function formatDate() {
+    return new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  document.getElementById('avatar-initials').textContent = getInitials(name);
+  document.getElementById('user-name-display').textContent = name;
+  document.getElementById('greeting-text').textContent = `${getGreeting()}, ${name.split(' ')[0]}`;
+  document.getElementById('greeting-date').textContent = formatDate() + ' · Spring Semester 2026';
+  document.getElementById('role-display').textContent = role === 'admin' ? 'Admin' : 'Instructor';
+  document.getElementById('role-sub').textContent = role === 'admin' ? 'Full access' : 'Can book rooms';
+
+  if (role === 'admin') {
+    document.getElementById('admin-section').classList.remove('hidden');
+  }
+
+  async function loadStats() {
+    try {
+      const res = await fetch(`${API}/reservation?staff_id=${staffId}`, {
+        headers: { 'authorization': token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const pending = data.filter(r => r.approval_status === 'pending').length;
+        const approved = data.filter(r => r.approval_status === 'approved').length;
+        document.getElementById('res-count').textContent = data.length;
+        document.getElementById('res-sub').textContent = `${pending} pending · ${approved} approved`;
+      }
+    } catch (e) {
+      document.getElementById('res-count').textContent = '—';
+      document.getElementById('res-sub').textContent = 'Could not load';
+    }
+
+    try {
+      const now = new Date();
+      const day = now.toLocaleDateString('en-US', { weekday: 'long' });
+      const res = await fetch(`${API}/timetable`, { headers: { 'authorization': token } });
+      if (res.ok) {
+        const rooms = [2, 3, 9, 11, 12];
+        document.getElementById('rooms-count').textContent = rooms.length;
+      }
+    } catch (e) {}
+
+    if (role === 'admin') {
+      try {
+        const res = await fetch(`${API}/approvals/pending`, { headers: { 'authorization': token } });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('pending-count').textContent = `${data.length} pending`;
+        }
+      } catch (e) {}
+    }
+  }
+
+  loadStats();
+</script>
+</body>
+</html>

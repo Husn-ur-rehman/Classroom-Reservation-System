@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timetable — CRS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f4f5f7; --white: #fff; --border: #e0e2e7;
+    --text: #111827; --muted: #6b7280; --hint: #9ca3af;
+    --blue: #185fa5; --blue-light: #e6f1fb; --blue-mid: #378add;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; }
+
+  nav {
+    background: var(--white); border-bottom: 0.5px solid var(--border);
+    height: 52px; display: flex; align-items: center;
+    padding: 0 1.5rem; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-left { display: flex; align-items: center; gap: 1rem; }
+  .brand { font-size: 14px; font-weight: 500; color: var(--text); }
+  .nav-links { display: flex; gap: 2px; }
+  .nl { padding: 6px 14px; border-radius: 6px; font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: none; transition: background 0.1s; }
+  .nl:hover { background: var(--bg); color: var(--text); }
+  .nl.active { background: var(--blue-light); color: var(--blue); }
+  .user-chip { display: flex; align-items: center; gap: 8px; border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 12px 4px 4px; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: var(--blue); }
+  .user-name { font-size: 12px; color: #374151; }
+  .logout-btn { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: 4px; font-family: inherit; }
+  .logout-btn:hover { color: #dc2626; }
+
+  .body { padding: 1.5rem; max-width: 1000px; margin: 0 auto; }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1.2rem; flex-wrap: wrap;
+  }
+  .toolbar h2 { font-size: 16px; font-weight: 500; color: var(--text); flex: 1; }
+  select {
+    background: var(--white); border: 0.5px solid var(--border);
+    border-radius: 7px; padding: 7px 12px; color: #374151;
+    font-size: 13px; font-family: inherit; outline: none; cursor: pointer;
+  }
+  select:focus { border-color: var(--blue-mid); }
+
+  .legend { display: flex; gap: 14px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .ld { width: 10px; height: 10px; border-radius: 2px; }
+
+  .card { background: var(--white); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+
+  .grid-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th {
+    background: #f9fafb; font-size: 11px; font-weight: 500; color: var(--muted);
+    padding: 10px 8px; text-align: center; border-bottom: 0.5px solid var(--border);
+    border-right: 0.5px solid var(--border); letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  th:last-child { border-right: none; }
+  .tc {
+    font-size: 11px; color: var(--hint); padding: 5px 10px;
+    border-bottom: 0.5px solid var(--border); border-right: 0.5px solid var(--border);
+    background: #f9fafb; text-align: center; white-space: nowrap; width: 90px;
+  }
+  td {
+    border-bottom: 0.5px solid var(--border); border-right: 0.5px solid var(--border);
+    padding: 3px; height: 58px; background: var(--white); vertical-align: top;
+  }
+  td:last-child { border-right: none; }
+  tr:last-child td, tr:last-child .tc { border-bottom: none; }
+
+  .cell { border-radius: 6px; padding: 5px 7px; height: 100%; }
+  .cb { background: #e6f1fb; } .cb .cc { color: #0c447c; } .cb .ci { color: #185fa5; }
+  .cg { background: #eaf3de; } .cg .cc { color: #27500a; } .cg .ci { color: #3b6d11; }
+  .ca { background: #faeeda; } .ca .cc { color: #633806; } .ca .ci { color: #854f0b; }
+  .cp { background: #eeedfe; } .cp .cc { color: #3c3489; } .cp .ci { color: #534ab7; }
+  .ce { background: #f9fafb; }
+  .cc { font-size: 11px; font-weight: 500; }
+  .ci { font-size: 10px; margin-top: 2px; }
+  .cr { font-size: 10px; color: var(--hint); margin-top: 2px; }
+
+  .recess td, .recess .tc {
+    background: #f4f5f7; text-align: center; font-size: 11px;
+    color: var(--hint); padding: 5px; height: auto;
+  }
+
+  .loading-row td { text-align: center; color: var(--hint); font-size: 13px; padding: 2rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <span class="brand">CRS</span>
+    <div class="nav-links">
+      <a href="home.html" class="nl">Home</a>
+      <a href="timetable.html" class="nl active">Timetable</a>
+      <a href="reservation.html" class="nl">Reservations</a>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="user-chip">
+      <div class="avatar" id="avatar">?</div>
+      <span class="user-name" id="user-name">—</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="body">
+  <div class="toolbar">
+    <h2>Weekly timetable</h2>
+    <select id="section-select">
+      <option value="">— Select section —</option>
+      <option value="2A">Section 2A</option>
+      <option value="2B">Section 2B</option>
+      <option value="2C">Section 2C</option>
+      <option value="2D">Section 2D</option>
+      <option value="2E">Section 2E</option>
+      <option value="2F">Section 2F</option>
+    </select>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="ld" style="background:#b5d4f4"></div>CS-252 · CAO</div>
+    <div class="leg"><div class="ld" style="background:#c0dd97"></div>CT-261 · DBMS</div>
+    <div class="leg"><div class="ld" style="background:#fac775"></div>EC-209 · FCA</div>
+    <div class="leg"><div class="ld" style="background:#cecbf6"></div>MT-272 · LAG</div>
+    <div class="leg"><div class="ld" style="background:#f9fafb;border:0.5px solid #e5e7eb"></div>EA-218 · BCE</div>
+  </div>
+
+  <div class="card">
+    <div class="grid-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:90px">Time</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+          </tr>
+        </thead>
+        <tbody id="timetable-body">
+          <tr class="loading-row">
+            <td colspan="6">Select a section to view the timetable</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:4000/api';
+  const token = localStorage.getItem('token');
+  const name = localStorage.getItem('name') || '';
+
+  if (!token) window.location.href = 'auth.html';
+
+  function logout() { localStorage.clear(); window.location.href = 'auth.html'; }
+  function getInitials(n) { return n.split(' ').map(x => x[0]).join('').toUpperCase().slice(0,2); }
+
+  document.getElementById('avatar').textContent = getInitials(name);
+  document.getElementById('user-name').textContent = name;
+
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const SLOTS = [
+    { id: 1, label: '08:30–09:20' },
+    { id: 2, label: '09:20–10:10' },
+    { id: 3, label: '10:10–11:00' },
+    { id: 4, label: '11:30–12:20' },
+    { id: 5, label: '12:20–13:10' },
+    { id: 6, label: '14:00–14:50' },
+    { id: 7, label: '14:50–15:40' },
+    { id: 8, label: '15:40–16:30' },
+  ];
+
+  const COURSE_COLORS = {
+    'CS-252': 'cb',
+    'CT-261': 'cg',
+    'EC-209': 'ca',
+    'MT-272': 'cp',
+    'EA-218': 'ce',
+  };
+
+  function buildGrid(entries) {
+    // Map: slot_id -> day_no -> entry
+    const map = {};
+    SLOTS.forEach(s => { map[s.id] = {}; });
+    entries.forEach(e => {
+      const slotId = parseInt(e.slot_id);
+      if (map[slotId]) map[slotId][e.day_no] = e;
+    });
+
+    const tbody = document.getElementById('timetable-body');
+    tbody.innerHTML = '';
+
+    SLOTS.forEach((slot, idx) => {
+      // Add recess row before slot 4
+      if (slot.id === 4) {
+        const recessRow = document.createElement('tr');
+        recessRow.className = 'recess';
+        recessRow.innerHTML = `<td colspan="6">Recess &nbsp;·&nbsp; 11:00 – 11:30</td>`;
+        tbody.appendChild(recessRow);
+
+        // Add lunch row before slot 6
+      }
+      if (slot.id === 6) {
+        const lunchRow = document.createElement('tr');
+        lunchRow.className = 'recess';
+        lunchRow.innerHTML = `<td colspan="6">Lunch / Prayer &nbsp;·&nbsp; 13:10 – 14:00</td>`;
+        tbody.appendChild(lunchRow);
+      }
+
+      const tr = document.createElement('tr');
+      let html = `<td class="tc">${slot.label}</td>`;
+
+      DAYS.forEach(day => {
+        const entry = map[slot.id][day];
+        if (entry) {
+          const colorClass = COURSE_COLORS[entry.course_code] || 'ce';
+          html += `
+            <td>
+              <div class="cell ${colorClass}">
+                <div class="cc">${entry.course_code}</div>
+                <div class="ci">${entry.instructor_name.split(' ').map((n,i) => i===0 ? n[0]+'.' : n).join(' ')}</div>
+                <div class="cr">Rm ${entry.room_no}</div>
+              </div>
+            </td>`;
+        } else {
+          html += `<td><div class="cell ce"></div></td>`;
+        }
+      });
+
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function loadTimetable(sectionId) {
+    const tbody = document.getElementById('timetable-body');
+    tbody.innerHTML = `<tr class="loading-row"><td colspan="6">Loading...</td></tr>`;
+
+    try {
+      const res = await fetch(`${API}/timetable/section?section_id=${sectionId}`, {
+        headers: { 'authorization': token }
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr class="loading-row"><td colspan="6">No timetable data for this section</td></tr>`;
+        return;
+      }
+      buildGrid(data);
+    } catch {
+      tbody.innerHTML = `<tr class="loading-row"><td colspan="6">Failed to load timetable</td></tr>`;
+    }
+  }
+
+  document.getElementById('section-select').addEventListener('change', (e) => {
+    if (e.target.value) loadTimetable(e.target.value);
+  });
+</script>
+</body>
+</html>

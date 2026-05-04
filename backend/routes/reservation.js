@@ -8,12 +8,12 @@ router.get('/', verifyToken, async (req, res) => {
     const { staff_id } = req.query;
     try {
         const result = await pool.query(
-            `SELECT R.*, TS.STARTING_TIME, TS.ENDING_TIME, C.ROOM_NO
-             FROM RESERVATION R
-             JOIN TIMESLOT TS ON R.TIMESLOT_ID = TS.SLOT_ID
-             JOIN CLASSROOM C ON R.ROOM_ID = C.ROOM_NO
-             WHERE R.CREATED_BY = $1
-             ORDER BY R.RESERVED_DATE DESC`,
+            `SELECT R.*, TS.STARTING_TIME, TS.ENDING_TIME, AR.APPROVAL_STATUS
+            FROM RESERVATION R
+            JOIN TIMESLOT TS ON R.TIMESLOT_ID = TS.SLOT_ID
+            LEFT JOIN APPROVAL_REQUEST AR ON R.RESERVATION_ID = AR.RESERVATION_ID
+            WHERE R.CREATED_BY = $1
+            ORDER BY R.RESERVED_DATE DESC`,
             [staff_id]
         );
         res.json(result.rows);

@@ -325,7 +325,7 @@
 
     if (role === 'admin') {
       try {
-        const res = await fetch(`${API}/approvals/pending`, { headers: { 'authorization': token } });
+        const res = await fetch(`${API}/approval/pending`, { headers: { 'authorization': token } });
         if (res.ok) {
           const data = await res.json();
           document.getElementById('pending-count').textContent = `${data.length} pending`;

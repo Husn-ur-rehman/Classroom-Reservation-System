@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Approvals — CRS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f4f5f7; --white: #fff; --border: #e0e2e7;
+    --text: #111827; --muted: #6b7280; --hint: #9ca3af;
+    --blue: #185fa5; --blue-light: #e6f1fb; --blue-mid: #378add; --blue-dark: #0c4479;
+    --green: #3b6d11; --green-light: #eaf3de;
+    --red: #b91c1c; --red-light: #fef2f2; --red-border: #fecaca;
+    --amber: #854d0e; --amber-light: #fef9c3;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; }
+
+  nav {
+    background: var(--white); border-bottom: 0.5px solid var(--border);
+    height: 52px; display: flex; align-items: center;
+    padding: 0 1.5rem; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-left { display: flex; align-items: center; gap: 1rem; }
+  .brand { font-size: 14px; font-weight: 500; color: var(--text); }
+  .nav-links { display: flex; gap: 2px; }
+  .nl { padding: 6px 14px; border-radius: 6px; font-size: 13px; color: var(--muted); text-decoration: none; transition: background 0.1s; }
+  .nl:hover { background: var(--bg); color: var(--text); }
+  .nl.active { background: var(--blue-light); color: var(--blue); }
+  .user-chip { display: flex; align-items: center; gap: 8px; border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 12px 4px 4px; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; color: var(--blue); }
+  .user-name { font-size: 12px; color: #374151; }
+  .logout-btn { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
+  .logout-btn:hover { color: #dc2626; }
+
+  .body { padding: 1.5rem; max-width: 800px; margin: 0 auto; }
+
+  .page-header { margin-bottom: 1.4rem; }
+  .page-header h2 { font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .page-header p { font-size: 13px; color: var(--muted); }
+
+  .approval-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .approval-card {
+    background: var(--white); border: 0.5px solid var(--border);
+    border-radius: 10px; padding: 1.2rem;
+  }
+
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .card-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .card-sub { font-size: 12px; color: var(--muted); }
+
+  .badge { font-size: 10px; padding: 3px 10px; border-radius: 10px; display: inline-block; }
+  .badge-pending { background: var(--amber-light); color: var(--amber); }
+
+  .card-details {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px; margin-bottom: 1rem;
+    padding: 10px; background: var(--bg); border-radius: 8px;
+  }
+  .detail-item { }
+  .detail-label { font-size: 10px; color: var(--hint); letter-spacing: 0.3px; text-transform: uppercase; margin-bottom: 3px; }
+  .detail-val { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  .card-actions { display: flex; gap: 8px; }
+
+  .btn-approve {
+    flex: 1; background: var(--green-light); border: 0.5px solid #b5d490;
+    border-radius: 7px; padding: 8px; color: var(--green);
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-approve:hover { background: #d5ecb8; }
+
+  .btn-reject {
+    flex: 1; background: var(--red-light); border: 0.5px solid var(--red-border);
+    border-radius: 7px; padding: 8px; color: var(--red);
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-reject:hover { background: #fecaca; }
+
+  .empty-state { text-align: center; color: var(--hint); font-size: 13px; padding: 3rem; background: var(--white); border: 0.5px solid var(--border); border-radius: 10px; }
+  .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+  .toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem;
+    background: var(--text); color: var(--white);
+    padding: 10px 16px; border-radius: 8px; font-size: 13px;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none; z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <span class="brand">CRS</span>
+    <div class="nav-links">
+      <a href="home.html" class="nl">Home</a>
+      <a href="timetable.html" class="nl">Timetable</a>
+      <a href="reservation.html" class="nl">Reservations</a>
+      <a href="approvals.html" class="nl active">Approvals</a>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="user-chip">
+      <div class="avatar" id="avatar">?</div>
+      <span class="user-name" id="user-name">—</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="body">
+  <div class="page-header">
+    <h2>Approval requests</h2>
+    <p>Review and action pending room reservations</p>
+  </div>
+
+  <div class="approval-list" id="approval-list">
+    <div class="empty-state">Loading...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:4000/api';
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  const name = localStorage.getItem('name') || '';
+  const staffId = localStorage.getItem('staff_id');
+
+  if (!token) window.location.href = 'auth.html';
+  if (role !== 'admin') window.location.href = 'home.html';
+
+  function logout() { localStorage.clear(); window.location.href = 'auth.html'; }
+  function getInitials(n) { return n.split(' ').map(x => x[0]).join('').toUpperCase().slice(0,2); }
+
+  document.getElementById('avatar').textContent = getInitials(name);
+  document.getElementById('user-name').textContent = name;
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function formatDate(d) {
+    return new Date(d).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function getSlotLabel(slotId) {
+    const slots = {
+      1: '08:30–09:20', 2: '09:20–10:10', 3: '10:10–11:00',
+      4: '11:30–12:20', 5: '12:20–13:10', 6: '14:00–14:50',
+      7: '14:50–15:40', 8: '15:40–16:30'
+    };
+    return slots[slotId] || `Slot ${slotId}`;
+  }
+
+  async function loadApprovals() {
+    const list = document.getElementById('approval-list');
+    try {
+      const res = await fetch(`${API}/approval/pending`, {
+        headers: { 'authorization': token }
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+
+      if (data.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">✓</div>
+            No pending approvals
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = data.map(r => `
+        <div class="approval-card" id="card-${r.reservation_id}">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Room ${r.room_id} · ${r.section_id}</div>
+              <div class="card-sub">Requested by ${r.requested_by}</div>
+            </div>
+            <span class="badge badge-pending">Pending</span>
+          </div>
+          <div class="card-details">
+            <div class="detail-item">
+              <div class="detail-label">Date</div>
+              <div class="detail-val">${formatDate(r.reserved_date)}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Time slot</div>
+              <div class="detail-val">${r.starting_time ? r.starting_time.slice(0,5) + ' – ' + r.ending_time.slice(0,5) : '—'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Section</div>
+              <div class="detail-val">${r.section_id}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Room</div>
+              <div class="detail-val">Room ${r.room_id}</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-approve" onclick="action(${r.reservation_id}, 'approved')">Approve</button>
+            <button class="btn-reject" onclick="action(${r.reservation_id}, 'rejected')">Reject</button>
+          </div>
+        </div>
+      `).join('');
+
+    } catch(e) {
+      list.innerHTML = '<div class="empty-state">Failed to load approvals</div>';
+    }
+  }
+
+  async function action(reservationId, status) {
+    try {
+      const res = await fetch(`${API}/approval/${reservationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'authorization': token },
+        body: JSON.stringify({ status, approved_by: parseInt(staffId) })
+      });
+
+      if (!res.ok) throw new Error();
+
+      // Remove card from UI
+      const card = document.getElementById(`card-${reservationId}`);
+      if (card) card.remove();
+
+      showToast(status === 'approved' ? 'Reservation approved' : 'Reservation rejected');
+
+      // Show empty state if no cards left
+      if (document.querySelectorAll('.approval-card').length === 0) {
+        document.getElementById('approval-list').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">✓</div>
+            No pending approvals
+          </div>`;
+      }
+
+    } catch(e) {
+      showToast('Action failed — try again');
+    }
+  }
+
+  loadApprovals();
+</script>
+</body>
+</html>
